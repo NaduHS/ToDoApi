@@ -21,79 +21,128 @@ namespace ToDoApi.Controllers
         [HttpGet("/GetAll")]
         public async Task<ActionResult<IEnumerable<ToDoItem>>> GetTodoItems()
         {
-            var result = await _context.TodoItems.ToListAsync();
+            try
+            {
+                var result = await _context.TodoItems.ToListAsync();
 
-            return result;
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+
         }
 
         //Get Item by Id
         [HttpGet("{id}")]
         public async Task<ActionResult<ToDoItem>> GetTodoItemById(int id)
         {
-            var todoItem = await _context.TodoItems.FindAsync(id);
-
-            if (todoItem == null)
+            try
             {
-                return NotFound();
+                var todoItem = await _context.TodoItems.FindAsync(id);
+
+                if (todoItem == null)
+                {
+                    return NotFound();
+                }
+
+                return todoItem;
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error: {ex.Message}");
             }
 
-            return todoItem;
         }
 
         //	Create a new record
         [HttpPost]
         public async Task<ActionResult<ToDoItem>> CreateTodoItem(ToDoItem item)
         {
-            if(item.Id == 0)
+            try
             {
-                _context.TodoItems.Add(item);
+                if (item.Id == 0)
+                {
+                    _context.TodoItems.Add(item);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return CreatedAtAction(nameof(GetTodoItemById), new { id = item.Id }, item);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error: {ex.Message}");
             }
 
-            await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetTodoItemById), new { id = item.Id }, item);
         }
 
         // Mark an item as “done”
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTodoItem(int id, ToDoItem item)
         {
-            if (id != item.Id)
+            try
             {
-                return BadRequest();
+                if (id != item.Id)
+                {
+                    return BadRequest();
+                }
+
+                _context.Entry(item).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error: {ex.Message}");
             }
 
-            _context.Entry(item).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
 
         //	Delete records individually
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTodoItem(int id)
         {
-            var todoItem = await _context.TodoItems.FindAsync(id);
-
-            if (todoItem == null)
+            try
             {
-                return NotFound();
+                var todoItem = await _context.TodoItems.FindAsync(id);
+
+                if (todoItem == null)
+                {
+                    return NotFound();
+                }
+
+                _context.TodoItems.Remove(todoItem);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error: {ex.Message}");
             }
 
-            _context.TodoItems.Remove(todoItem);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
 
         // Delete all records
         [HttpDelete]
         public async Task<IActionResult> DeleteAllTodoItems()
         {
-            _context.TodoItems.RemoveRange(_context.TodoItems);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.TodoItems.RemoveRange(_context.TodoItems);
+                await _context.SaveChangesAsync();
 
-            return NoContent();
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error: {ex.Message}");
+            }
+
         }
     }
 }
